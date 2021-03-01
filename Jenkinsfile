@@ -32,16 +32,11 @@ pipeline
         {
             steps
             {
-            withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'Password', usernameVariable: 'Username')]) 
-            }
-
-        stage('Stage docker build')
-        {
-            steps
-            {
                 sh "curl --upload-file calculator.jar http://nexus:8081/repository/my-raw/"
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'Password', usernameVariable: 'Username')]) {
+    // some block
+} 
             }
-        }
   
         // Apaga os dados do workspace.
         stage('Stage D - Clean up resources')
