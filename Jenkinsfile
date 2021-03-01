@@ -26,9 +26,19 @@ pipeline
                 sh "docker push localhost:8082/${DOCKER_IMAGE_NAME}"
                 sh "javac *.java"
                 sh "jar cfe calculator.jar TotalCalculator *.class"
-                sh "curl -v --user 'admin:admin' --upload-file calculator.jar http://nexus:8081/repository/my-raw/"
             }
         }
+        steps
+            { 
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'Password', usernameVariable: 'Username')]) {
+    // some block
+            }
+        steps
+            {
+                sh "curl --upload-file calculator.jar http://nexus:8081/repository/my-raw/"
+            }
+        }
+        
   
         // Apaga os dados do workspace.
         stage('Stage D - Clean up resources')
