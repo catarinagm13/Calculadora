@@ -13,7 +13,6 @@ pipeline {
     stages {
         stage('Build Docker Image') { 
             steps {
-                sh 'mvn clean package'
                 sh 'docker build -t "${DOCKER_IMAGE_NAME}" .'
             }
         }   
