@@ -34,7 +34,7 @@ pipeline
             {
             withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'Password', usernameVariable: 'Username')]) 
             }
-            
+
         stage('Stage docker build')
         {
             steps
@@ -53,4 +53,3 @@ pipeline
         }
         
     }
-}
