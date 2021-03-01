@@ -1,50 +1,51 @@
-pipeline
-{
-    agent {
-        label "mvn"
-    }
-    parameters
-    {
-        // Tem que se ir ao Jenkins > Configure > This project is parameterized. 
-        string(name: 'DOCKER_IMAGE_NAME', defaultValue: 'image_name', description: 'Docker image name')
-        string(name: 'DOCKER_CONTAINER_NAME', defaultValue: 'container_name', description: 'Docker container name')
-        string(name: 'DOCKER_PORT', defaultValue: '3000', description: 'Docker port')
-    }
+pipeline {
+    agent any
+    parameters {
 
- 
-     stages
-    {
- 
-        stage('Stage docker build')
-        {
-            steps
-            {
-                sh "docker rmi -f ${DOCKER_IMAGE_NAME}"
-                sh "docker build -t ${DOCKER_IMAGE_NAME} ."
-                sh "docker login -u admin -p admin localhost:8082"
-                sh "docker tag ${DOCKER_IMAGE_NAME} localhost:8082/${DOCKER_IMAGE_NAME}"
-                sh "docker push localhost:8082/${DOCKER_IMAGE_NAME}"
-                sh "javac *.java"
-                sh "jar cfe calculator.jar TotalCalculator *.class"
+        string(name: 'IMAGE_NAME', defaultValue:'java-calculator', description:'Name of the Image')
+        string(name: 'JAR_NAME', defaultValue:'calculadora', description:'Name of the .jar file')
+
+        //string(name: 'CONTAINER_NAME', defaultValue: 'java-mvn', description:'Docker Container Name')
+        //string(name: 'DOCKER_PORT', defaultValue: '3000', description:'Docker Container Host Port')
+    }
+        
+    stages{
+     
+        stage("Build Jar"){
+            steps{
+                sh 'javac *.java'
+                sh 'jar cfe "$JAR_NAME".jar Calculator *.class'
             }
         }
-        stage('Stage docker build')
-        {
-            steps
-            {
-                sh "curl --upload-file calculator.jar http://nexus:8081/repository/my-raw/"
-                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'Password', usernameVariable: 'Username')]) {
-    // some block
-} 
+
+        stage("store artifact on Nexus") {
+            steps{
+                withCredentials([usernameColonPassword(credentialsId: 'curl-jenkinsfile-uploadArt-nexus', variable: 'USERPASS')]) {
+                sh 'curl -v -u "$USERPASS" --upload-file /var/jenkins_home/workspace/java-calculator-nexus/"$JAR_NAME".jar http://nexus:8081/repository/my-raw/'
             }
-  
-        // Apaga os dados do workspace.
-        stage('Stage D - Clean up resources')
-        {
-            steps
-            {
+        }
+    }
+
+        stage('Create Docker Image') {
+            steps {
+                sh 'docker build -t "$IMAGE_NAME":v1.0 .'
+            }
+        }
+
+        stage('Push Image to Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-login-nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                sh 'docker login -u "$USERNAME" -p "$PASSWORD" localhost:8082'
+                sh 'docker tag "$IMAGE_NAME":v1.0 localhost:8082/"$IMAGE_NAME":v1.0'
+                sh 'docker push localhost:8082/"$IMAGE_NAME":v1.0'
+
+            }
+        }
+    }
+                stage('Clear WorkSpace') {
+            steps {
                 cleanWs()
             }
         }
-        
-    }
+    } 
+}
