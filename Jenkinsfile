@@ -3,6 +3,7 @@ pipeline
     agent {
         label "mvn"
     }
+    
     parameters
     {
         // Tem que se ir ao Jenkins > Configure > This project is parameterized. 
@@ -38,6 +39,7 @@ pipeline
                 sh "curl --upload-file calculator.jar http://nexus:8081/repository/my-raw/"
             }
         }
+    }
         
   
         // Apaga os dados do workspace.
