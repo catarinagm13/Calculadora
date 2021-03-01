@@ -22,6 +22,8 @@ pipeline {
                 sh 'docker login -u admin -p admin localhost:8082'
                 sh 'docker tag ${​​DOCKER_IMAGE_NAME}​​ localhost:8082/"${DOCKER_IMAGE_NAME}"'
                 sh 'docker push localhost:8082/"${DOCKER_IMAGE_NAME}"'
+                sh 'javac *.java'
+                sh 'jar cfe he.jar Calculator *.class'
                 sh 'curl -v -u "admin:admin" --upload-file ./target/*.jar http://nexus:8081/repository/my-raw/'
             }
         }   
